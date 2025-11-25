@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <base target="_top">
   <title>Painel de Eventos</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 0; 
-      background-color: #f0f0f0; 
-      display: flex; 
-      flex-direction: column; 
-      min-height: 100vh; 
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
-
     .main-content {
       flex-grow: 1;
       margin: 20px auto;
@@ -23,132 +23,108 @@
       max-width: 98vw;
       overflow-x: visible;
     }
-
-    /* 🔹 TABELA COMPACTA COM COLUNAS ESTREITAS */
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 0;
-      table-layout: fixed;     /* ← controla largura das colunas */
+      table-layout: fixed;
     }
-
-    th, td { 
+    th, td {
       padding: 4px 6px;
-      text-align: left; 
-      border-bottom: 1px solid #ddd; 
+      text-align: left;
+      border-bottom: 1px solid #ddd;
       font-size: 11px;
       line-height: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 0;            /* ← evita expandir coluna */
+      max-width: 0;
     }
-
-    /* 🔹 LARGURAS PROPORCIONAIS (estreitas) */
     thead th:nth-child(1), tbody td:nth-child(1) { width: 15%; }
-    thead th:nth-child(2), tbody td:nth-child(2) { width: 12%;  }
+    thead th:nth-child(2), tbody td:nth-child(2) { width: 12%; }
     thead th:nth-child(3), tbody td:nth-child(3) { width: 9%; }
-    thead th:nth-child(4), tbody td:nth-child(4) { width: 5%;  }
+    thead th:nth-child(4), tbody td:nth-child(4) { width: 5%; }
     thead th:nth-child(5), tbody td:nth-child(5) { width: 9%; }
     thead th:nth-child(6), tbody td:nth-child(6) { width: 15%; }
     thead th:nth-child(7), tbody td:nth-child(7) { width: 35%; }
-
-    td.colab-nome { 
-      vertical-align: middle; 
+    td.colab-nome {
+      vertical-align: middle;
       font-weight: normal !important;
       padding-top: 4px;
       padding-bottom: 4px;
     }
-
-    th { 
-      background-color: #58746a; 
-      color: white; 
-      font-weight: normal; 
+    th {
+      background-color: #58746a;
+      color: white;
+      font-weight: normal;
       border-bottom: none;
       font-size: 11px;
       padding: 6px;
     }
-
     tr:nth-child(even) { background-color: #f9f9f9; }
-
-    .status-atencao { 
-      background-color: #f44336; 
-      color: white; 
+    .status-atencao {
+      background-color: #f44336;
+      color: white;
       padding: 2px 4px;
-      border-radius: 4px; 
-      font-size: 11px; 
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: bold;
     }
-    .status-em-andamento { 
-      background-color: #ffeb3b; 
-      color: #333; 
-      padding: 2px 4px; 
-      border-radius: 4px; 
-      font-size: 11px; 
+    .status-em-andamento {
+      background-color: #ffeb3b;
+      color: #333;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: bold;
     }
     .status-aguardando {
-      background-color: #ff9800; 
-      color: white; 
+      background-color: #ff9800;
+      color: white;
       padding: 2px 4px;
-      border-radius: 4px; 
-      font-size: 11px; 
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: bold;
     }
-
     td.status-cell {
       text-align: center !important;
     }
-
     .obs-text {
       color: #b20000 !important;
       font-weight: bold;
     }
-
-    .header-row { 
-      display: flex; 
-      justify-content: flex-end; 
+    .header-row {
+      display: flex;
+      justify-content: flex-end;
       align-items: flex-end;
       padding: 4px 0;
     }
-
-    .last-update { 
-      text-align: right; 
-      font-size: 11px; 
-      color: #777; 
+    .last-update {
+      text-align: right;
+      font-size: 11px;
+      color: #777;
     }
-
-    .no-data { 
-      text-align: center; 
-      padding: 20px 10px; 
-      color: #777; 
-      font-size: 11px; 
+    .no-data {
+      text-align: center;
+      padding: 20px 10px;
+      color: #777;
+      font-size: 11px;
     }
-
-    .footer { 
-      text-align: center; 
-      padding: 6px; 
-      font-size: 11px; 
-      color: #777; 
-      margin-top: 10px; 
+    .footer {
+      text-align: center;
+      padding: 6px;
+      font-size: 11px;
+      color: #777;
+      margin-top: 10px;
     }
-
   </style>
-
   <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKxlynOrAd9IqUvrFeg5Yop1k5AuuQkIVD6kSjEZFby4vzgu6AvrZFK0tw41HoCj1cMw/exec';
+
     function updateLastUpdateTime() {
       const now = new Date();
       const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       document.getElementById('last-update-time').textContent = timeString;
-    }
-
-    function normalizeNameClient(s) {
-      if (s === null || s === undefined) return "";
-      try {
-        return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
-      } catch (e) {
-        return String(s).replace(/\s+/g, ' ').trim().toUpperCase();
-      }
     }
 
     function renderTable(eventos) {
@@ -252,26 +228,26 @@
     }
 
     function fetchData() {
-      google.script.run
-        .withSuccessHandler(renderTable)
-        .withFailureHandler(() => {})
-        .getEventosParaPainel();
+      fetch(WEB_APP_URL)
+        .then(response => response.json())
+        .then(data => {
+          renderTable(data);
+        })
+        .catch(error => {
+          console.error('Erro ao buscar dados:', error);
+          renderTable([]);
+        });
     }
 
     window.onload = function() {
-      try {
-        renderTable(JSON.parse('<?= JSON.stringify(eventos) ?>'));
-      } catch (e) { 
-        renderTable([]); 
-      }
+      renderTable([]);
+      fetchData();
       setInterval(fetchData, 30000);
     };
   </script>
 </head>
-
 <body>
   <div class="main-content">
-
     <table>
       <thead>
         <tr>
@@ -286,17 +262,13 @@
       </thead>
       <tbody id="event-table-body"></tbody>
     </table>
-
     <div id="no-data-message" class="no-data" style="display:none;">
       <p>Nenhum dado disponível para esta página</p>
     </div>
-
     <div class="header-row">
       <div class="last-update">Última atualização: <span id="last-update-time"></span></div>
     </div>
-
   </div>
-
   <div class="footer">© 2025 - Sistema de Escalas</div>
 </body>
 </html>
