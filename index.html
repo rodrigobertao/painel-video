@@ -118,8 +118,10 @@
       margin-top: 10px;
     }
   </style>
+
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKxlynOrAd9IqUvrFeg5Yop1k5AuuQkIVD6kSjEZFby4vzgu6AvrZFK0tw41HoCj1cMw/exec';
+    // 🚀 URL DO SEU WEB APP (JSON)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxKxlynOrAd9IqUvrFeg5Yop1k5AuuQkIVD6kSjEZFby4vzgu6AvrZFK0tw41HoCj1cMw/exec?action=getEventos";
 
     function updateLastUpdateTime() {
       const now = new Date();
@@ -130,6 +132,7 @@
     function renderTable(eventos) {
       const tbody = document.getElementById('event-table-body');
       const noData = document.getElementById('no-data-message');
+
       tbody.innerHTML = '';
       const eventosArray = Array.isArray(eventos) ? eventos : [];
 
@@ -174,51 +177,39 @@
 
       for (let idx = 0; idx < eventosArray.length; idx++) {
         const evento = eventosArray[idx];
-        const grp = indexToGroup[idx] || { name: "", start: idx, size: 1 };
+        const grp = indexToGroup[idx];
         const isFirst = (grp.start === idx);
 
-        let statusHtml = '';
-        if (evento.status === 'Atenção') statusHtml = `<span class="status-atencao">${evento.status}</span>`;
-        else if (evento.status === 'Em andamento') statusHtml = `<span class="status-em-andamento">${evento.status}</span>`;
-        else if (evento.status === 'Aguardando Ficha') statusHtml = `<span class="status-aguardando">${evento.status}</span>`;
-        else statusHtml = evento.status || '';
+        let statusHtml = "";
+        if (evento.status === "Atenção") statusHtml = `<span class="status-atencao">${evento.status}</span>`;
+        else if (evento.status === "Em andamento") statusHtml = `<span class="status-em-andamento">${evento.status}</span>`;
+        else if (evento.status === "Aguardando Ficha") statusHtml = `<span class="status-aguardando">${evento.status}</span>`;
+        else statusHtml = evento.status ?? "";
 
-        const servicoDisplay = evento.servico ? evento.servico : '-';
+        const servicoDisplay = evento.servico || "-";
         const obsClass = evento.isObservacao ? "obs-text" : "";
 
-        let rowHtml = '';
+        let rowHtml = "";
 
         if (isFirst) {
-          if (grp.name && grp.size > 1) {
-            rowHtml = `<tr>
-                        <td class="colab-nome" rowspan="${grp.size}">${grp.name}</td>
-                        <td class="status-cell">${statusHtml}</td>
-                        <td>${evento.local || ''}</td>
-                        <td>${evento.horaPrevistaFormatada || ''}</td>
-                        <td>${servicoDisplay}</td>
-                        <td>${evento.tipoEvento || ''}</td>
-                        <td class="${obsClass}">${evento.nomeEvento || ''}</td>
-                       </tr>`;
-          } else {
-            rowHtml = `<tr>
-                        <td class="colab-nome">${grp.name || ''}</td>
-                        <td class="status-cell">${statusHtml}</td>
-                        <td>${evento.local || ''}</td>
-                        <td>${evento.horaPrevistaFormatada || ''}</td>
-                        <td>${servicoDisplay}</td>
-                        <td>${evento.tipoEvento || ''}</td>
-                        <td class="${obsClass}">${evento.nomeEvento || ''}</td>
-                       </tr>`;
-          }
+          rowHtml = `<tr>
+            <td class="colab-nome" rowspan="${grp.size}">${grp.name}</td>
+            <td class="status-cell">${statusHtml}</td>
+            <td>${evento.local || ""}</td>
+            <td>${evento.horaPrevistaFormatada || ""}</td>
+            <td>${servicoDisplay}</td>
+            <td>${evento.tipoEvento || ""}</td>
+            <td class="${obsClass}">${evento.nomeEvento || ""}</td>
+          </tr>`;
         } else {
           rowHtml = `<tr>
-                      <td class="status-cell">${statusHtml}</td>
-                      <td>${evento.local || ''}</td>
-                      <td>${evento.horaPrevistaFormatada || ''}</td>
-                      <td>${servicoDisplay}</td>
-                      <td>${evento.tipoEvento || ''}</td>
-                      <td class="${obsClass}">${evento.nomeEvento || ''}</td>
-                    </tr>`;
+            <td class="status-cell">${statusHtml}</td>
+            <td>${evento.local || ""}</td>
+            <td>${evento.horaPrevistaFormatada || ""}</td>
+            <td>${servicoDisplay}</td>
+            <td>${evento.tipoEvento || ""}</td>
+            <td class="${obsClass}">${evento.nomeEvento || ""}</td>
+          </tr>`;
         }
 
         tbody.innerHTML += rowHtml;
@@ -230,11 +221,9 @@
     function fetchData() {
       fetch(WEB_APP_URL)
         .then(response => response.json())
-        .then(data => {
-          renderTable(data);
-        })
-        .catch(error => {
-          console.error('Erro ao buscar dados:', error);
+        .then(data => renderTable(data))
+        .catch(err => {
+          console.error("Erro ao buscar dados:", err);
           renderTable([]);
         });
     }
@@ -245,7 +234,9 @@
       setInterval(fetchData, 30000);
     };
   </script>
+
 </head>
+
 <body>
   <div class="main-content">
     <table>
@@ -262,13 +253,16 @@
       </thead>
       <tbody id="event-table-body"></tbody>
     </table>
+
     <div id="no-data-message" class="no-data" style="display:none;">
       <p>Nenhum dado disponível para esta página</p>
     </div>
+
     <div class="header-row">
       <div class="last-update">Última atualização: <span id="last-update-time"></span></div>
     </div>
   </div>
+
   <div class="footer">© 2025 - Sistema de Escalas</div>
 </body>
 </html>
