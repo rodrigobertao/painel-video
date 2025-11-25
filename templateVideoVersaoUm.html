@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Painel de Eventos</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      background-color: #f0f0f0; 
+      display: flex; 
+      flex-direction: column; 
+      min-height: 100vh; 
+    }
+
+    .main-content {
+      flex-grow: 1;
+      margin: 20px auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 0 10px 20px 10px;
+      max-width: 98vw;
+      overflow-x: visible;
+    }
+
+    /* 🔹 TABELA COMPACTA COM COLUNAS ESTREITAS */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 0;
+      table-layout: fixed;     /* ← controla largura das colunas */
+    }
+
+    th, td { 
+      padding: 4px 6px;
+      text-align: left; 
+      border-bottom: 1px solid #ddd; 
+      font-size: 11px;
+      line-height: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 0;            /* ← evita expandir coluna */
+    }
+
+    /* 🔹 LARGURAS PROPORCIONAIS (estreitas) */
+    thead th:nth-child(1), tbody td:nth-child(1) { width: 15%; }
+    thead th:nth-child(2), tbody td:nth-child(2) { width: 12%;  }
+    thead th:nth-child(3), tbody td:nth-child(3) { width: 9%; }
+    thead th:nth-child(4), tbody td:nth-child(4) { width: 5%;  }
+    thead th:nth-child(5), tbody td:nth-child(5) { width: 9%; }
+    thead th:nth-child(6), tbody td:nth-child(6) { width: 15%; }
+    thead th:nth-child(7), tbody td:nth-child(7) { width: 35%; }
+
+    td.colab-nome { 
+      vertical-align: middle; 
+      font-weight: normal !important;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    th { 
+      background-color: #58746a; 
+      color: white; 
+      font-weight: normal; 
+      border-bottom: none;
+      font-size: 11px;
+      padding: 6px;
+    }
+
+    tr:nth-child(even) { background-color: #f9f9f9; }
+
+    .status-atencao { 
+      background-color: #f44336; 
+      color: white; 
+      padding: 2px 4px;
+      border-radius: 4px; 
+      font-size: 11px; 
+      font-weight: bold;
+    }
+    .status-em-andamento { 
+      background-color: #ffeb3b; 
+      color: #333; 
+      padding: 2px 4px; 
+      border-radius: 4px; 
+      font-size: 11px; 
+      font-weight: bold;
+    }
+    .status-aguardando {
+      background-color: #ff9800; 
+      color: white; 
+      padding: 2px 4px;
+      border-radius: 4px; 
+      font-size: 11px; 
+      font-weight: bold;
+    }
+
+    td.status-cell {
+      text-align: center !important;
+    }
+
+    .obs-text {
+      color: #b20000 !important;
+      font-weight: bold;
+    }
+
+    .header-row { 
+      display: flex; 
+      justify-content: flex-end; 
+      align-items: flex-end;
+      padding: 4px 0;
+    }
+
+    .last-update { 
+      text-align: right; 
+      font-size: 11px; 
+      color: #777; 
+    }
+
+    .no-data { 
+      text-align: center; 
+      padding: 20px 10px; 
+      color: #777; 
+      font-size: 11px; 
+    }
+
+    .footer { 
+      text-align: center; 
+      padding: 6px; 
+      font-size: 11px; 
+      color: #777; 
+      margin-top: 10px; 
+    }
+
+  </style>
+
+  <script>
+    function updateLastUpdateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('last-update-time').textContent = timeString;
+    }
+
+    function normalizeNameClient(s) {
+      if (s === null || s === undefined) return "";
+      try {
+        return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
+      } catch (e) {
+        return String(s).replace(/\s+/g, ' ').trim().toUpperCase();
+      }
+    }
+
+    function renderTable(eventos) {
+      const tbody = document.getElementById('event-table-body');
+      const noData = document.getElementById('no-data-message');
+      tbody.innerHTML = '';
+      const eventosArray = Array.isArray(eventos) ? eventos : [];
+
+      if (eventosArray.length === 0) {
+        noData.style.display = 'block';
+        updateLastUpdateTime();
+        return;
+      }
+
+      noData.style.display = 'none';
+
+      const groups = [];
+      let currentGroupName = null;
+      let currentStart = 0;
+
+      for (let i = 0; i < eventosArray.length; i++) {
+        const rawName = eventosArray[i].colaborador;
+        const trimmed = rawName ? String(rawName).trim() : "";
+
+        if (trimmed !== "") {
+          if (currentGroupName !== null) {
+            groups.push({ name: currentGroupName, start: currentStart, size: i - currentStart });
+          }
+          currentGroupName = trimmed;
+          currentStart = i;
+        } else {
+          if (currentGroupName === null) {
+            currentGroupName = "";
+            currentStart = i;
+          }
+        }
+      }
+
+      if (currentGroupName !== null) {
+        groups.push({ name: currentGroupName, start: currentStart, size: eventosArray.length - currentStart });
+      }
+
+      const indexToGroup = {};
+      groups.forEach(g => {
+        for (let k = g.start; k < g.start + g.size; k++) indexToGroup[k] = g;
+      });
+
+      for (let idx = 0; idx < eventosArray.length; idx++) {
+        const evento = eventosArray[idx];
+        const grp = indexToGroup[idx] || { name: "", start: idx, size: 1 };
+        const isFirst = (grp.start === idx);
+
+        let statusHtml = '';
+        if (evento.status === 'Atenção') statusHtml = `<span class="status-atencao">${evento.status}</span>`;
+        else if (evento.status === 'Em andamento') statusHtml = `<span class="status-em-andamento">${evento.status}</span>`;
+        else if (evento.status === 'Aguardando Ficha') statusHtml = `<span class="status-aguardando">${evento.status}</span>`;
+        else statusHtml = evento.status || '';
+
+        const servicoDisplay = evento.servico ? evento.servico : '-';
+        const obsClass = evento.isObservacao ? "obs-text" : "";
+
+        let rowHtml = '';
+
+        if (isFirst) {
+          if (grp.name && grp.size > 1) {
+            rowHtml = `<tr>
+                        <td class="colab-nome" rowspan="${grp.size}">${grp.name}</td>
+                        <td class="status-cell">${statusHtml}</td>
+                        <td>${evento.local || ''}</td>
+                        <td>${evento.horaPrevistaFormatada || ''}</td>
+                        <td>${servicoDisplay}</td>
+                        <td>${evento.tipoEvento || ''}</td>
+                        <td class="${obsClass}">${evento.nomeEvento || ''}</td>
+                       </tr>`;
+          } else {
+            rowHtml = `<tr>
+                        <td class="colab-nome">${grp.name || ''}</td>
+                        <td class="status-cell">${statusHtml}</td>
+                        <td>${evento.local || ''}</td>
+                        <td>${evento.horaPrevistaFormatada || ''}</td>
+                        <td>${servicoDisplay}</td>
+                        <td>${evento.tipoEvento || ''}</td>
+                        <td class="${obsClass}">${evento.nomeEvento || ''}</td>
+                       </tr>`;
+          }
+        } else {
+          rowHtml = `<tr>
+                      <td class="status-cell">${statusHtml}</td>
+                      <td>${evento.local || ''}</td>
+                      <td>${evento.horaPrevistaFormatada || ''}</td>
+                      <td>${servicoDisplay}</td>
+                      <td>${evento.tipoEvento || ''}</td>
+                      <td class="${obsClass}">${evento.nomeEvento || ''}</td>
+                    </tr>`;
+        }
+
+        tbody.innerHTML += rowHtml;
+      }
+
+      updateLastUpdateTime();
+    }
+
+    function fetchData() {
+      google.script.run
+        .withSuccessHandler(renderTable)
+        .withFailureHandler(() => {})
+        .getEventosParaPainel();
+    }
+
+    window.onload = function() {
+      try {
+        renderTable(JSON.parse('<?= JSON.stringify(eventos) ?>'));
+      } catch (e) { 
+        renderTable([]); 
+      }
+      setInterval(fetchData, 30000);
+    };
+  </script>
+</head>
+
+<body>
+  <div class="main-content">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Colaborador</th>
+          <th>Status</th>
+          <th>Local</th>
+          <th>H. Prevista</th>
+          <th>Serviço</th>
+          <th>Tipo de Evento</th>
+          <th>Nome do Evento / Observação</th>
+        </tr>
+      </thead>
+      <tbody id="event-table-body"></tbody>
+    </table>
+
+    <div id="no-data-message" class="no-data" style="display:none;">
+      <p>Nenhum dado disponível para esta página</p>
+    </div>
+
+    <div class="header-row">
+      <div class="last-update">Última atualização: <span id="last-update-time"></span></div>
+    </div>
+
+  </div>
+
+  <div class="footer">© 2025 - Sistema de Escalas</div>
+</body>
+</html>
