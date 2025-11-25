@@ -38,16 +38,27 @@ function normalizeName(s) {
 
 function doGet(e) {
   try {
+    // 🔥 Se for pedido por JSON (usado no GitHub Pages)
+    if (e && e.parameter && e.parameter.action === 'getEventos') {
+      const dados = getEventosParaPainel();
+      return ContentService
+        .createTextOutput(JSON.stringify(dados))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 🔥 Se for abrir o painel (HTML normal dentro do Apps Script)
     const eventos = gerarPainel();
     const template = HtmlService.createTemplateFromFile('template');
     template.eventos = eventos;
     return template.evaluate()
       .setTitle('Tabela de Escala do Vídeo')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+
   } catch (error) {
     return HtmlService.createHtmlOutput('<h1>Erro ao carregar o Painel</h1><p>' + error.toString() + '</p>');
   }
 }
+
 
 function getEventosParaPainel() {
   return gerarPainel();
@@ -266,3 +277,4 @@ function processarEFiltrarEventos(dados, fichasEnviadas, obsMap) {
 
   return eventos;
 }
+
